@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Виртуальная карта БРСМ</title>
+    
+    <!-- Подключаем красивый шрифт с Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- ОБЩИЕ СТИЛИ --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f0f2f5;
+            overflow: hidden; /* Убираем прокрутку */
+        }
+
+        /* --- СТИЛИ ЭКРАНА ПРИВЕТСТВИЯ --- */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: 10; /* Поверх всего */
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .welcome-content {
+            text-align: center;
+            color: white;
+            animation: fadeInScale 1.5s ease-out;
+        }
+
+        .welcome-content h1 {
+            font-size: 4rem; /* Большой размер заголовка */
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1rem;
+        }
+
+        .welcome-content p {
+            font-size: 1.5rem;
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* --- СТИЛИ ЭКРАНА С КАРТОЙ --- */
+        #card-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f2f5; /* Фон для карты */
+            opacity: 0; /* Изначально невидима */
+            transition: opacity 1s ease-in;
+        }
+
+        /* --- СТИЛИ САМОЙ КАРТЫ --- */
+        .card {
+            width: 400px;
+            height: 250px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298); /* Сине-фиолетовый градиент */
+            border-radius: 20px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        /* Логотип БРСМ */
+        .card-logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        /* Чип */
+        .card-chip {
+            width: 50px;
+            height: 40px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            border-radius: 8px;
+            position: absolute;
+            top: 60px;
+            left: 25px;
+        }
+
+        /* Номер карты */
+        .card-number {
+            font-family: 'Roboto Mono', monospace; /* Моноширинный шрифт для цифр */
+            font-size: 1.4rem;
+            letter-spacing: 3px;
+            margin-top: 20px;
+        }
+
+        /* Информация внизу карты */
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .card-holder {
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .card-holder span {
+            display: block;
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .card-expiry {
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        
+        .card-expiry span {
+            display: block;
+            font-size: 0.7rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* Класс для скрытия экрана приветствия */
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none; /* Чтобы на него нельзя было нажать */
+        }
+        
+        /* Класс для показа экрана с картой */
+        .visible {
+            opacity: 1 !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- ЭКРАН 1: ПРИВЕТСТВИЕ -->
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <h1>Добро пожаловать</h1>
+            <p>в виртуальную карту БРСМ</p>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 2: ВИРТУАЛЬНАЯ КАРТА (изначально скрыт) -->
+    <div id="card-screen">
+        <div class="card">
+            <div class="card-logo">БРСМ</div>
+            <div class="card-chip"></div>
+            <div class="card-number">1234 5678 9012 3456</div>
+            <div class="card-footer">
+                <div class="card-holder">
+                    ИВАНОВ ИВАН
+                    <span>Card Holder</span>
+                </div>
+                <div class="card-expiry">
+                    12/28
+                    <span>Expires</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ждем, пока вся страница загрузится
+        window.addEventListener('load', function() {
+            
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const cardScreen = document.getElementById('card-screen');
+
+            // Устанавливаем таймер на 3.5 секунды (3500 миллисекунд)
+            setTimeout(() => {
+                // 1. Добавляем класс для плавного исчезновения приветствия
+                welcomeScreen.classList.add('hidden');
+
+                // 2. Через 1 секунду (чтобы анимация исчезновения успела сработать)
+                setTimeout(() => {
+                    // Показываем экран с картой
+                    cardScreen.classList.add('visible');
+                }, 1000); // Задержка должна совпадать с `transition` в CSS для `#welcome-screen`
+
+            }, 3500); // Время показа приветствия
+        });
+    </script>
+
+</body>
+</html>
